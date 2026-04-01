@@ -41,6 +41,16 @@ app.use(async (_req: Request, _res: Response, next: NextFunction) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 
+// Health check — useful for diagnosing Vercel cold starts
+app.get('/api/health', async (_req: Request, res: Response) => {
+  try {
+    await connectDB();
+    res.json({ success: true, db: 'connected', env: !!process.env.MONGODB_URI });
+  } catch (err) {
+    res.status(500).json({ success: false, db: 'failed', error: (err as Error).message });
+  }
+});
+
 // 404
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ success: false, message: 'Route not found' });
