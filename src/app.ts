@@ -1,13 +1,27 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import { connectDB } from './lib/db';
 import authRoutes from './routes/authRoutes';
 import gameRoutes from './routes/gameRoutes';
-import { requireAuth } from './middleware/auth';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
+
+// Ensure DB is connected before every request (safe for serverless)
+app.use(async (_req: Request, _res: Response, next: NextFunction) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
